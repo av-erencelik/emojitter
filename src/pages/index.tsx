@@ -5,6 +5,7 @@ import { api, type RouterOutputs } from "~/utils/api";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import Image from "next/image";
+import LoadingSpinner from "~/components/LoadingSpinner";
 dayjs.extend(relativeTime);
 const CreatePostWizard = () => {
   const { user } = useUser();
@@ -57,12 +58,23 @@ const PostView = ({ post, author }: PostWithUser) => {
   );
 };
 
-const Home: NextPage = () => {
-  const user = useUser();
-  console.log(user);
+const Feed = () => {
   const { data, isLoading } = api.posts.getAll.useQuery();
-  if (isLoading) return <div>Loading...</div>;
-  if (!data) return <div>Something went wrong</div>;
+  if (isLoading) return <LoadingSpinner />;
+  if (!isLoading && !data) return <div>Something Went Wrong</div>;
+  return (
+    <div className="flex flex-col">
+      {data.map(({ post, author }) => (
+        <PostView key={post.id} post={post} author={author} />
+      ))}
+    </div>
+  );
+};
+
+const Home: NextPage = () => {
+  const { user, isLoaded, isSignedIn } = useUser();
+  api.posts.getAll.useQuery();
+  if (!isLoaded) return <LoadingSpinner />;
   return (
     <>
       <Head>
@@ -73,7 +85,7 @@ const Home: NextPage = () => {
       <main className="flex h-screen justify-center">
         <div className="h-full w-full border-x border-slate-400 md:max-w-2xl">
           <div className="flex justify-start border-b border-slate-400 p-4">
-            {!user.isSignedIn ? (
+            {!isSignedIn ? (
               <SignInButton>
                 <div className="text-white">Sign</div>
               </SignInButton>
@@ -81,11 +93,7 @@ const Home: NextPage = () => {
               <CreatePostWizard />
             )}
           </div>
-          <div className="flex flex-col">
-            {data.map(({ post, author }) => (
-              <PostView key={post.id} post={post} author={author} />
-            ))}
-          </div>
+          <Feed />
         </div>
       </main>
     </>
