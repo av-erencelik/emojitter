@@ -5,8 +5,12 @@ import { api, type RouterOutputs } from "~/utils/api";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import Image from "next/image";
-import LoadingSpinner from "~/components/LoadingSpinner";
+import {
+  LoadingSpinnerBig,
+  LoadingSpinnerSmall,
+} from "~/components/LoadingSpinner";
 import { useState } from "react";
+import { toast } from "react-hot-toast";
 dayjs.extend(relativeTime);
 const CreatePostWizard = () => {
   const { user } = useUser();
@@ -18,6 +22,14 @@ const CreatePostWizard = () => {
       onSuccess: () => {
         setInput("");
         void ctx.posts.getAll.invalidate();
+      },
+      onError: (e) => {
+        const errorMessage = e.data?.zodError?.fieldErrors.content;
+        toast.error(
+          errorMessage && errorMessage[0]
+            ? errorMessage[0]
+            : "Something went wrong"
+        );
       },
     });
   return (
@@ -37,7 +49,10 @@ const CreatePostWizard = () => {
         onChange={(e) => setInput(e.target.value)}
         disabled={isPosting}
       />
-      <button onClick={() => createPost({ content: input })}>Post</button>
+      {input !== "" && !isPosting && (
+        <button onClick={() => createPost({ content: input })}>Post</button>
+      )}
+      {isPosting && <LoadingSpinnerSmall />}
     </div>
   );
 };
@@ -72,7 +87,7 @@ const PostView = ({ post, author }: PostWithUser) => {
 
 const Feed = () => {
   const { data, isLoading } = api.posts.getAll.useQuery();
-  if (isLoading) return <LoadingSpinner />;
+  if (isLoading) return <LoadingSpinnerBig />;
   if (!isLoading && !data) return <div>Something Went Wrong</div>;
   return (
     <div className="flex flex-col">
@@ -86,7 +101,7 @@ const Feed = () => {
 const Home: NextPage = () => {
   const { isLoaded, isSignedIn } = useUser();
   api.posts.getAll.useQuery();
-  if (!isLoaded) return <LoadingSpinner />;
+  if (!isLoaded) return <LoadingSpinnerBig />;
   return (
     <>
       <Head>
