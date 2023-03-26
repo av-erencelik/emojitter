@@ -52,7 +52,7 @@ const PostView = ({ post, author }: PostWithUser) => {
             post.createdAt
           ).fromNow()}`}</span>
         </div>
-        <span>{post.content}</span>
+        <span className="text-xl">{post.content}</span>
       </div>
     </div>
   );
@@ -72,7 +72,7 @@ const Feed = () => {
 };
 
 const Home: NextPage = () => {
-  const { user, isLoaded, isSignedIn } = useUser();
+  const { isLoaded, isSignedIn } = useUser();
   api.posts.getAll.useQuery();
   if (!isLoaded) return <LoadingSpinner />;
   return (
